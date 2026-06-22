@@ -1,69 +1,72 @@
 # Contexto Rápido — Brechó na Mão
 
 > **Lido PRIMEIRO por qualquer agente/IA em nova sessão.**
+> Seção atual: Tela 4 (Composição). Refs: `STATE.md` para detalhes, `ROADMAP.md` para status.
 
 ## Projeto
 - Web app mobile-first para gerar posts de Instagram de brechó
-- Tira foto do manequim → IA gera modelo virtual → adiciona texto → IA gera legenda → baixa imagem pronta
-- **Persona:** tia 50-65 anos, usa Android, Wi-Fi instável, sem conhecimento técnico
+- Fluxo: tira foto do manequim → IA gera modelo virtual → adiciona texto → IA gera legenda → baixa imagem pronta
+- **Persona:** tia 50-65 anos, usa Android Realme 360x800, Wi-Fi instável, sem conhecimento técnico
 - **Budget MVP:** R$ 0/mês
-- **5 telas:** Upload → Config → Geração → Composição → Legenda/Download
+- **5 telas + integração + deploy:** Upload ✅ → Config ✅ → Geração ✅ → Composição ⏳ → Legenda ⏳ → E2E ⏳ → Deploy ⏳
 
-## Onde estamos
-- **Última seção completa:** Tela 3 (Geração) — tag v0.4-tela-3-geracao
-- **Seção atual:** Tela 4 — Composição (próxima a implementar)
-- **Próxima seção:** Tela 5 — Legenda
-- **Ver:** `STATE.md` para detalhes, `ROADMAP.md` para status
+## Onde estamos (sessão #1, 2026-06-22)
+- **Última seção completa:** Tela 3 (Geração) — tag `v0.4-tela-3-geracao`
+- **Seção atual:** Tela 4 (Composição) — **próxima a implementar**
+- **Próxima seção:** Tela 5 (Legenda)
+- **Decisão técnica pendente:** Canvas (client) vs Cloudinary (server) pro texto sobreposto
+- Branch: `main` (limpo, 14 commits, 4 tags)
 
-## Stack travado (não mudar sem alinhamento)
-- **Framework:** Next.js 16.2 (App Router) + React 19 + TypeScript + Tailwind 4
-- **Hosting:** Vercel Hobby (plano B: Cloudflare — ver `docs/PESQUISA-CLOUDFLARE-PLANO-B.md`)
-- **Banco:** Neon PostgreSQL + Prisma 7
-- **Imagens:** Cloudinary (25 GB free)
+## Stack travado (NÃO mudar sem alinhamento)
+- **Framework:** Next.js 16.2.9 (App Router) + React 19 + TypeScript + Tailwind 4
+- **Hosting:** Vercel Hobby (plano B: Cloudflare — ver `../docs/PESQUISA-CLOUDFLARE-PLANO-B.md`)
+- **Banco:** Neon PostgreSQL (sa-east-1) + Prisma 7 (com `prisma.config.ts` separado)
+- **Imagens:** Cloudinary (`dmqqkv4ru`, 25 GB free)
 - **VTON:** HF Spaces (OutfitAnyone/Kolors) + FASHN API como upgrade pago
-- **LLM (legendas):** Groq (Qwen3-32B) + Cerebras + OpenRouter fallback
-- **Validação:** Zod
+- **LLM (legendas):** Groq (Qwen3-32B, `gsk_...`) + Cerebras + OpenRouter fallback
+- **Validação:** Zod + react-hook-form
+- **UI:** Componentes próprios (Button ≥48px, LgpdBanner, SizePills)
 
 ## Decisões importantes
-- **Tio vai sozinho** (decisão 22/06/2026): não tem sócio/turma
-- **Vercel Hobby** (decisão 22/06/2026): R$ 0/mês, com risco de TOS comercial assumido
-- **Plano B documentado:** se Vercel reclamar, migrar pra Cloudflare (~2 dias de esforço)
-- **Job VTON:** síncrono por enquanto (max 5 min do Vercel Hobby 2026 resolve)
-- **Timeout do Vercel:** 5 min em 2026 (não 10s como diziam docs antigas)
+- **Iago vai sozinho** (decisão 22/06/2026)
+- **Vercel Hobby** (decisão 22/06/2026): R$ 0/mês, risco TOS assumido
+- **Plano B Cloudflare** documentado caso Vercel reclame (~2 dias migração)
+- **VTON real (HF Spaces) ainda é placeholder** — backend OK, falta implementar `callHFSpace()` em `lib/huggingface/client.ts`
+- **Job VTON:** fire-and-forget + polling 3s + timeout 90s (Vercel Hobby aguenta 5 min)
+- **Timeout do Vercel 2026:** 5 min, não 10s (corrigido)
+- **Limite de 3 regen** hardcoded na Tela 3 (constante `MAX_REGENS` no `app/generate/page.tsx`)
 
 ## Arquivos críticos já criados
-- `prisma/schema.prisma` (Settings, Post, Generation)
-- `prisma.config.ts` (Prisma 7+)
-- `src/lib/db/prisma.ts` (singleton)
-- `src/lib/cloudinary/client.ts` (upload)
-- `src/lib/groq/client.ts` (LLM com fallback)
-- `src/lib/huggingface/client.ts` (VTON com feature flag)
+- `prisma/schema.prisma` (Settings, Post, Generation) + migração aplicada
+- `prisma.config.ts` (Prisma 7+ com helper `env()`)
+- `src/lib/db/prisma.ts` (singleton PrismaPg)
+- `src/lib/cloudinary/client.ts` (uploadImage)
+- `src/lib/groq/client.ts` (Qwen3-32B + fallback)
+- `src/lib/huggingface/client.ts` (VTON com feature flag, **`callHFSpace` é placeholder**)
+- `src/lib/schemas/config.ts` (Zod: GARMENT_TYPES, SIZES, STYLES, `parsePriceString`)
+- `src/lib/hooks/use-tryon.ts` (POST + polling + timeout)
 - `src/lib/utils.ts` (cn, formatPrice, isValidUrl)
-- `src/app/api/upload/route.ts` (Tela 1)
-- `src/app/api/tryon/route.ts` (Tela 3 — POST + GET polling)
-- `src/app/api/caption/route.ts` (Tela 5)
-- `src/app/api/compose/route.ts` (Tela 4)
-- `src/app/api/settings/route.ts` (Configurações da loja)
+- `src/components/{ui,upload,config,generation}/*` (5+ componentes)
+- `src/app/{api,config,generate,compose}/` (5 API routes + 4 páginas)
 
-## Variáveis de ambiente necessárias
-- `DATABASE_URL` (Neon PostgreSQL)
-- `GROQ_API_KEY` (LLM)
-- `CLOUDINARY_CLOUD_NAME` + `CLOUDINARY_API_KEY` + `CLOUDINARY_API_SECRET`
-- `HF_TOKEN` (opcional, aumenta rate limit)
-- `VTON_PROVIDER=hf` (ou `fashn` se quiser pagar)
-- `GROQ_MODEL=qwen/qwen3-32b`
+## Variáveis de ambiente (em `.env.local`, NÃO vai pro git)
+- `DATABASE_URL` (Neon pooled)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- `GROQ_API_KEY`, `GROQ_MODEL=qwen/qwen3-32b`
+- `HF_TOKEN` (opcional)
+- `VTON_PROVIDER=hf` (ou `fashn`)
 
 ## Pendências conhecidas
-- FASHN provider não implementado (Fase 2 — pago)
-- Fallback Cerebras/OpenRouter não implementado (Tela 5)
-- Cloudinary text overlay (Tela 4) não implementado
-- HF Spaces chamada real (Tela 3) ainda é placeholder
-- LGPD banner (Tela 1) ainda não implementado
-- Testes E2E não escritos
+- **`callHFSpace()` ainda é placeholder** — Tela 3 funciona, mas VTON real precisa implementação
+- **FASHN provider** não implementado (Fase 2 — pago)
+- **Cerebras/OpenRouter fallback** não implementado (Tela 5)
+- **Cloudinary text overlay** (Tela 4) não implementado — alternativa: client-side Canvas
+- **LGPD banner** SSR flicker (mitigação futura)
+- **Testes E2E** não escritos
 
-## Como retomar
+## Como retomar em outro device
 ```
-"Continuar Brechó na Mão. Estado em STATE.md. Próxima seção: Tela 1 (Upload)."
+"Continuar Brechó na Mão. Estado em STATE.md. Próxima seção: Tela 4 (Composição)."
 ```
 
 > Detalhes: `STATE.md` | Status: `ROADMAP.md` | Spec: `../docs/SPEC-SDD.md` (v2.1)

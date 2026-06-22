@@ -86,9 +86,10 @@ Quando o usuário disser "vou parar", "até amanhã", "trocar de device":
 ```
 1. ATUALIZE STATE.md com "Próximo passo imediato"
 2. ATUALIZE ROADMAP.md com status atual
-3. FAÇA git commit com tudo que mudou
-4. git tag v0.X-<seção> (se seção completa)
-5. RESPONDA ao usuário com resumo do que foi feito
+3. ATUALIZE .sdd-context (resumo IA-first)
+4. FAÇA git commit com tudo que mudou
+5. git tag v0.X-<seção> (se seção completa)
+6. RESPONDA ao usuário com resumo do que foi feito
 ```
 
 Template:
@@ -97,10 +98,13 @@ Template:
 
 ✅ O que fiz: [resumo]
 📁 Arquivos modificados: [lista]
-📍 Estado atualizado em STATE.md
+📍 Estado atualizado em STATE.md, ROADMAP.md e .sdd-context
 🎯 Próximo passo: [uma frase]
 
-Quando voltar, é só me chamar que eu leio STATE.md e continuo."
+Quando voltar, é só me chamar com:
+'Continuar Brechó na Mão. Estado em STATE.md. Próxima seção: [X]'
+
+A IA vai ler .sdd-context, STATE.md, ROADMAP.md e seguir de onde parou."
 ```
 
 ---
