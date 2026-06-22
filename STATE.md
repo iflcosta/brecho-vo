@@ -1,6 +1,6 @@
 # Estado Atual — Brechó na Mão
 
-**Última atualização:** 2026-06-22 13:50
+**Última atualização:** 2026-06-22 15:13
 **Sessão #:** 1
 **Dispositivo:** Windows
 
@@ -67,6 +67,9 @@ Nenhum ainda (código novo, não testado em produção).
 4. **22/06**: **gradio_client removido** — não tem versão Node oficial. VTON via fetch HTTP direto pra API Gradio
 5. **22/06**: **Branch renomeada** `master` → `main` (padrão GitHub)
 6. **22/06**: **autocrlf** configurado (`true` no Windows) pra evitar warnings de CRLF
+7. **22/06**: **Credenciais configuradas** — Cloudinary (`dmqqkv4ru`), Groq (`gsk_...`), Neon (sa-east-1, São Paulo)
+8. **22/06**: **Migração Prisma aplicada** — 3 tabelas criadas no Neon (`Settings`, `Post`, `Generation`)
+9. **22/06**: **Prisma 7 API corrigida** — `prisma.config.ts` usa helper `env()` + `dotenv/config`, separou schema de config
 
 ---
 
@@ -74,13 +77,16 @@ Nenhum ainda (código novo, não testado em produção).
 
 ```
 A  prisma/schema.prisma                   (Settings, Post, Generation)
-A  prisma.config.ts                        (Prisma 7+ config)
+A  prisma.config.ts                        (Prisma 7+ config — helper env() + dotenv)
+A  prisma/migrations/20260622181200_init/  (primeira migração aplicada no Neon)
 A  .env.example                            (template de env vars)
+A  .env                                    (Prisma CLI — DATABASE_URL)
+A  .env.local                              (Next.js local — Cloudinary, Groq, Neon)
 A  .sdd-context                            (resumo IA-first)
 A  STATE.md                                (este arquivo)
 A  ROADMAP.md                              (status das seções)
 M  AGENTS.md                               (substituído pelo do projeto)
-A  src/lib/db/prisma.ts                    (singleton)
+A  src/lib/db/prisma.ts                    (singleton + PrismaPg adapter)
 A  src/lib/cloudinary/client.ts            (upload)
 A  src/lib/groq/client.ts                  (LLM + fallback)
 A  src/lib/huggingface/client.ts           (VTON + feature flag)
