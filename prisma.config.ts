@@ -2,10 +2,10 @@
 // Refs: https://pris.ly/d/config-datasource
 //
 // Prisma 7 separou a config de datasource do schema.prisma.
-// Connection URL vai aqui; schema.prisma só define o provider e os models.
+// Usar o helper `env()` do prisma/config para type-safe env vars.
 
-import { defineConfig } from "prisma/config";
 import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -13,6 +13,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: env("DATABASE_URL"),
   },
 });
