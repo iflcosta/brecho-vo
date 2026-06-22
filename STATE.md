@@ -1,6 +1,6 @@
 # Estado Atual — Brechó na Mão
 
-**Última atualização:** 2026-06-22 16:45
+**Última atualização:** 2026-06-22 16:55
 **Sessão #:** 1
 **Dispositivo:** Windows
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Próximo passo imediato
 
-**Tela 3 (Geração) — Implementar chamada ao VTON com polling e loading state**
+**Tela 4 (Composição) — Implementar texto sobreposto (TAM, preço, hashtags) na imagem gerada**
 
 Por quê: Tela 2 tá pronta e validada. Agora a gente chama o /api/tryon com a imageUrl, faz polling do status, e mostra o resultado.
 
@@ -63,7 +63,7 @@ Critérios de aceite (do SPEC):
 
 ## 📍 Onde parei
 
-Tela 1 + Tela 2 completas e validadas. Smoke test passou em http://localhost:3000, /config, /generate.
+Tela 1 + Tela 2 + Tela 3 completas e validadas. Smoke test passou em http://localhost:3000, /config, /generate, /compose.
 
 Setup inicial completo. Stack escolhido e validado:
 - Next.js 16.2.9 + React 19 + TypeScript + Tailwind 4
@@ -98,6 +98,7 @@ Nenhum ainda (código novo, não testado em produção).
 9. **22/06**: **Prisma 7 API corrigida** — `prisma.config.ts` usa helper `env()` + `dotenv/config`, separou schema de config
 10. **22/06**: **Tela 2 (Config) implementada** — form com validação Zod, SizePills, máscara de preço, persistência localStorage
 11. **22/06**: **schema/config.ts criado** — single source of truth pra tipos de roupa, tamanhos, estilos + parser de preço
+12. **22/06**: **Tela 3 (Geração) implementada** — hook useTryOn com polling, GeneratingState com tempo estimado, GeneratedPreview com limite de 3 regen, /api/tryon agora é fire-and-forget
 
 ---
 
