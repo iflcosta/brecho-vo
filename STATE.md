@@ -1,6 +1,6 @@
 # Estado Atual — Brechó na Mão
 
-**Última atualização:** 2026-06-22 16:35
+**Última atualização:** 2026-06-22 16:45
 **Sessão #:** 1
 **Dispositivo:** Windows
 
@@ -8,30 +8,31 @@
 
 ## 🎯 Próximo passo imediato
 
-**Tela 2 (Config) — Implementar form com tipo, tamanho, preço, estilo, descrição**
+**Tela 3 (Geração) — Implementar chamada ao VTON com polling e loading state**
 
-Por quê: a Tela 1 tá pronta e validada. Agora a gente precisa capturar os metadados do produto que a tia quer postar.
+Por quê: Tela 2 tá pronta e validada. Agora a gente chama o /api/tryon com a imageUrl, faz polling do status, e mostra o resultado.
 
 Como fazer:
-1. Criar formulário em `src/app/config/page.tsx` (substituir placeholder)
-2. Campos: tipo (select), tamanho (pills PP/P/M/G/GG), preço (input R$), estilo (select), descrição (textarea opcional)
-3. Usar `react-hook-form` + `zod` (já instalados) pra validação
-4. Salvar no estado (localStorage ou context) e navegar pra `/generate` no submit
-5. Validação inline: campos obrigatórios com asterisco, mensagens em PT-BR
+1. Criar hook `useTryOn()` em `src/lib/hooks/use-tryon.ts` (chama POST /api/tryon + GET polling)
+2. Loading state com tempo estimado (~30-90s)
+3. Preview da imagem gerada (vinda do Cloudinary)
+4. Botão "Regerar" (até 3x) + "Avançar" (vai pra /compose)
+5. Persistir `generatedImageUrl` no localStorage
+6. Substituir placeholder em `src/app/generate/page.tsx`
 
 Arquivos a criar/modificar:
-- `src/app/config/page.tsx` (substituir placeholder)
-- `src/components/config/ConfigForm.tsx`
-- `src/components/config/SizePills.tsx`
+- `src/lib/hooks/use-tryon.ts`
+- `src/app/generate/page.tsx` (substituir placeholder)
+- `src/components/generation/GeneratingState.tsx`
+- `src/components/generation/GeneratedPreview.tsx`
 
 Critérios de aceite (do SPEC):
-- [ ] Campos obrigatórios marcados com *
-- [ ] Tipo da roupa: dropdown com opções fixas
-- [ ] Tamanho: pills horizontais (PP/P/M/G/GG)
-- [ ] Preço: input numérico com máscara R$
-- [ ] Estilo: dropdown (Vintage, Moderno, Anos 90, Y2K, Minimalista)
-- [ ] Validação inline (campos obrigatórios)
-- [ ] Imagem thumbnail visível durante scroll
+- [ ] Loading state com tempo estimado
+- [ ] Timeout de 60s com mensagem de erro
+- [ ] Botão "Regerar" chama API novamente
+- [ ] Limite de 3 regerações (com aviso)
+- [ ] Imagem gerada em alta resolução
+- [ ] Funciona offline depois de gerada (cache)
 
 Por quê: o backend `/api/upload` está pronto e funcional (valida formato, tamanho, salva no Cloudinary). Falta o frontend que usa esse endpoint.
 
@@ -62,7 +63,7 @@ Critérios de aceite (do SPEC):
 
 ## 📍 Onde parei
 
-Tela 1 (Upload) completa e validada. Smoke test passou em http://localhost:3000.
+Tela 1 + Tela 2 completas e validadas. Smoke test passou em http://localhost:3000, /config, /generate.
 
 Setup inicial completo. Stack escolhido e validado:
 - Next.js 16.2.9 + React 19 + TypeScript + Tailwind 4
@@ -71,7 +72,10 @@ Setup inicial completo. Stack escolhido e validado:
 - Clientes lib/ criados (db, cloudinary, groq, huggingface)
 - Documentação de contexto: `.sdd-context`, `STATE.md`, `ROADMAP.md`, `AGENTS.md`
 - Tela 1 (Upload): drag&drop, preview, validação, LGPD banner, navegação pra /config
-- Branch `feat/tela-1-upload` mergeada na main com tag `v0.2-tela-1-upload`
+- Tela 2 (Config): form com tipo, tamanho (pills), preço (máscara R$), estilo, descrição
+- Validação Zod com single source of truth (lib/schemas/config.ts)
+- Persistência em localStorage entre telas
+- Branch `feat/tela-2-config` mergeada na main com tag `v0.3-tela-2-config`
 
 ---
 
@@ -92,6 +96,8 @@ Nenhum ainda (código novo, não testado em produção).
 7. **22/06**: **Credenciais configuradas** — Cloudinary (`dmqqkv4ru`), Groq (`gsk_...`), Neon (sa-east-1, São Paulo)
 8. **22/06**: **Migração Prisma aplicada** — 3 tabelas criadas no Neon (`Settings`, `Post`, `Generation`)
 9. **22/06**: **Prisma 7 API corrigida** — `prisma.config.ts` usa helper `env()` + `dotenv/config`, separou schema de config
+10. **22/06**: **Tela 2 (Config) implementada** — form com validação Zod, SizePills, máscara de preço, persistência localStorage
+11. **22/06**: **schema/config.ts criado** — single source of truth pra tipos de roupa, tamanhos, estilos + parser de preço
 
 ---
 
