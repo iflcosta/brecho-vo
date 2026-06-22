@@ -10,9 +10,9 @@
 - **5 telas:** Upload → Config → Geração → Composição → Legenda/Download
 
 ## Onde estamos
-- **Última seção completa:** Tela 1 (Upload) — tag v0.2-tela-1-upload
-- **Seção atual:** Tela 2 — Config (próxima a implementar)
-- **Próxima seção:** Tela 3 — Geração
+- **Última seção completa:** Tela 2 (Config) — tag v0.3-tela-2-config
+- **Seção atual:** Tela 3 — Geração (próxima a implementar)
+- **Próxima seção:** Tela 4 — Composição
 - **Ver:** `STATE.md` para detalhes, `ROADMAP.md` para status
 
 ## Stack travado (não mudar sem alinhamento)
