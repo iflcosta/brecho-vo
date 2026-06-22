@@ -1,0 +1,93 @@
+// Brechó na Mão — Prisma schema
+// Refs: docs/SPEC-SDD.md#3.3-modelo-de-dados
+//
+// Banco: PostgreSQL (Neon free tier)
+// Geração: npx prisma generate (após qualquer mudança aqui)
+// Migração: npx prisma migrate dev --name <nome>
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// Settings — configurações da loja (single-row, mas modelado como tabela pra
+// permitir expansão futura: multi-loja, etc.)
+// ============================================================================
+model Settings {
+  id              String   @id @default(cuid())
+
+  // Identificação
+  storeName       String   @default("Brechó da Vovó")
+  instagramHandle String   @default("@brechodavovo")
+
+  // Visual
+  logoUrl         String?
+  primaryColor    String   @default("#E1306C") // Instagram pink
+  secondaryColor  String   @default("#262626")
+  fontFamily      String   @default("Inter")
+
+  // Texto padrão
+  defaultHashtags String   @default("#brechó #modavintage #brechóonline")
+  contactInfo     String?
+  paymentInfo     String?
+  shippingInfo    String?
+
+  // Meta
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================================================
+// Post — posts gerados (rascunho + finalizado)
+// ============================================================================
+model Post {
+  id              String   @id @default(cuid())
+
+  // Input do usuário
+  originalImage   String   // URL no Cloudinary
+  garmentType     String   // "Camisa", "Vestido", etc.
+  size            String   // "M", "G", "PP", etc.
+  price           String   // "R$ 45,00"
+  style           String   // "Vintage", "Moderno", etc.
+  description     String?  // Opcional
+
+  // Output
+  generatedImage  String?  // URL com modelo virtual
+  caption         String?  // Legenda gerada pela IA
+  finalImage      String?  // Imagem com texto sobreposto
+
+  // Metadata
+  status          String   @default("draft") // draft, completed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================================================
+// Generation — jobs assíncronos de VTON
+// Refs: docs/SPEC-SDD.md#12-riscos (VTON 30-90s, fire-and-forget + polling)
+// ============================================================================
+model Generation {
+  id              String   @id @default(cuid())
+
+  // Vínculo
+  postId          String?  // FK opcional pro Post (criado quando usuário avança)
+  userId          String?  // FK opcional pro User (Fase 2 com auth)
+
+  // Job state
+  status          String   @default("pending") // pending, processing, done, failed
+  provider        String   @default("hf")      // hf | fashn
+  inputImageUrl   String   // URL da imagem uploaded
+  outputImageUrl  String?  // URL da imagem gerada (preenchido em "done")
+  errorMessage    String?  // preenchido em "failed"
+  durationMs      Int?     // tempo total de processamento
+
+  // Meta
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
