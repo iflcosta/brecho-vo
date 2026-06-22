@@ -1,6 +1,6 @@
 # Estado Atual — Brechó na Mão
 
-**Última atualização:** 2026-06-22 15:13
+**Última atualização:** 2026-06-22 16:35
 **Sessão #:** 1
 **Dispositivo:** Windows
 
@@ -8,7 +8,30 @@
 
 ## 🎯 Próximo passo imediato
 
-**Tela 1 (Upload) — Implementar componente UploadZone com drag&drop + preview**
+**Tela 2 (Config) — Implementar form com tipo, tamanho, preço, estilo, descrição**
+
+Por quê: a Tela 1 tá pronta e validada. Agora a gente precisa capturar os metadados do produto que a tia quer postar.
+
+Como fazer:
+1. Criar formulário em `src/app/config/page.tsx` (substituir placeholder)
+2. Campos: tipo (select), tamanho (pills PP/P/M/G/GG), preço (input R$), estilo (select), descrição (textarea opcional)
+3. Usar `react-hook-form` + `zod` (já instalados) pra validação
+4. Salvar no estado (localStorage ou context) e navegar pra `/generate` no submit
+5. Validação inline: campos obrigatórios com asterisco, mensagens em PT-BR
+
+Arquivos a criar/modificar:
+- `src/app/config/page.tsx` (substituir placeholder)
+- `src/components/config/ConfigForm.tsx`
+- `src/components/config/SizePills.tsx`
+
+Critérios de aceite (do SPEC):
+- [ ] Campos obrigatórios marcados com *
+- [ ] Tipo da roupa: dropdown com opções fixas
+- [ ] Tamanho: pills horizontais (PP/P/M/G/GG)
+- [ ] Preço: input numérico com máscara R$
+- [ ] Estilo: dropdown (Vintage, Moderno, Anos 90, Y2K, Minimalista)
+- [ ] Validação inline (campos obrigatórios)
+- [ ] Imagem thumbnail visível durante scroll
 
 Por quê: o backend `/api/upload` está pronto e funcional (valida formato, tamanho, salva no Cloudinary). Falta o frontend que usa esse endpoint.
 
@@ -39,17 +62,16 @@ Critérios de aceite (do SPEC):
 
 ## 📍 Onde parei
 
+Tela 1 (Upload) completa e validada. Smoke test passou em http://localhost:3000.
+
 Setup inicial completo. Stack escolhido e validado:
 - Next.js 16.2.9 + React 19 + TypeScript + Tailwind 4
 - Prisma 7 + Neon PostgreSQL
 - API routes esqueleto criados (5 endpoints)
 - Clientes lib/ criados (db, cloudinary, groq, huggingface)
 - Documentação de contexto: `.sdd-context`, `STATE.md`, `ROADMAP.md`, `AGENTS.md`
-
-**Decisões de stack fechadas 22/06/2026:**
-- Vercel Hobby (com plano B Cloudflare documentado)
-- Groq Qwen3-32B + Cerebras/OpenRouter fallback
-- HF Spaces OutfitAnyone + FASHN upgrade
+- Tela 1 (Upload): drag&drop, preview, validação, LGPD banner, navegação pra /config
+- Branch `feat/tela-1-upload` mergeada na main com tag `v0.2-tela-1-upload`
 
 ---
 
