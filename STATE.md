@@ -11,6 +11,8 @@
 
 **Integra\u00e7\u00e3o E2E \u2014 Validar fluxo completo Upload \u2192 Download no navegador + mobile**
 
+**Status (28/06):** Setup completo (error boundaries, Playwright, checklist). Falta valida\u00e7\u00e3o manual do Iago no navegador.
+
 Por qu\u00ea: As 5 telas est\u00e3o implementadas e o build passa com 0 erros TS. Mas o Iago precisa rodar o app no navegador (com `.env.local` real) pra confirmar:
 1. Cada tela renderiza corretamente no mobile (Android Realme 360x800)
 2. localStorage persiste entre navega\u00e7\u00f5es

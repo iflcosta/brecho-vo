@@ -8,10 +8,10 @@
 | 3 | Tela 3: Gera\u00e7\u00e3o (VTON + loading + polling + limite 3 regen) | \u2705 DONE | 22/06 | 22/06 | `v0.4-tela-3-geracao` |
 | 4 | Tela 4: Composi\u00e7\u00e3o (texto sobreposto: TAM, pre\u00e7o, hashtags) | \u2705 DONE | 28/06 | 28/06 | `v0.5-tela-4-composicao` |
 | 5 | Tela 5: Legenda (gerar via Groq + edit + download) | \u2705 DONE | 28/06 | 28/06 | `v0.6-tela-5-legenda` |
-| 6 | Integra\u00e7\u00e3o E2E (fluxo completo Upload \u2192 Download) | \u23f3 PENDING | - | - | - |
+| 6 | Integra\u00e7\u00e3o E2E (setup: error boundaries + Playwright + checklist) | \ud83d\udea2 IN PROGRESS | 28/06 | - | `v0.7-integracao-e2e` |
 | 7 | Deploy Vercel + smoke test no mobile | \u23f3 PENDING | - | - | - |
 
-## Progresso: **6/8 se\u00e7\u00f5es completas (75%)**
+## Progresso: **6/8 se\u00e7\u00f5es completas (75%)** (E2E em valida\u00e7\u00e3o manual)
 
 ## Legenda
 - \u2705 DONE
@@ -75,12 +75,18 @@
 - Valida\u00e7\u00e3o Zod (`captionRequestSchema` + `captionFormSchema`)
 - Smoke test: build OK (13 rotas, 0 erros TS)
 
-### \u23f3 Integra\u00e7\u00e3o E2E \u2014 pr\u00f3xima
-- Validar fluxo completo: Upload \u2192 Download
-- Testar em mobile (Safari + Chrome Android)
-- Acessibilidade (axe-core)
-- LGPD compliance
-- Poss\u00edveis ajustes de UX ao longo do fluxo
+### \ud83d\udea2 Integra\u00e7\u00e3o E2E \u2014 em valida\u00e7\u00e3o (28/06)
+- **Setup completo:**
+  - `src/app/error.tsx` + `global-error.tsx` \u2014 error boundaries
+  - `src/app/not-found.tsx` \u2014 404 amig\u00e1vel
+  - `src/app/layout.tsx` \u2014 Toaster global (sonner) + metadata + viewport
+  - `playwright.config.ts` \u2014 mobile-first (Pixel 5 + Desktop Chrome)
+  - `tests/e2e/navigation.spec.ts` \u2014 7 testes (5 telas + 404 + bot\u00e3o voltar)
+  - `tests/e2e/api.spec.ts` \u2014 8 testes (GET healthchecks + POST valida\u00e7\u00f5es Zod)
+  - `docs/E2E-CHECKLIST.md` \u2014 checklist detalhado pra Iago (5 telas + cross-cutting + A11y)
+- **Valida\u00e7\u00e3o manual:** Iago precisa testar no device de origem com `.env.local` real
+- **Pr\u00f3ximo:** rodar Playwright (`npm run test:e2e:install && npm run test:e2e`) + validar cada tela no navegador
+- **Smoke test:** build OK (13 rotas, 0 warnings TS)
 
 ### \u23f3 Deploy Vercel \u2014 final
 - Configurar env vars no Vercel Dashboard

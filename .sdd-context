@@ -1,76 +1,75 @@
 # Contexto R\u00e1pido \u2014 Brech\u00f3 na M\u00e3o
 
 > **Lido PRIMEIRO por qualquer agente/IA em nova sess\u00e3o.**
-> Se\u00e7\u00e3o atual: Integra\u00e7\u00e3o E2E (fluxo completo Upload \u2192 Download). Refs: `STATE.md` para detalhes, `ROADMAP.md` para status.
+> Se\u00e7\u00e3o atual: Integra\u00e7\u00e3o E2E (valida\u00e7\u00e3o no navegador + mobile). Refs: `STATE.md` para detalhes, `ROADMAP.md` para status.
 
 ## Projeto
 - Web app mobile-first para gerar posts de Instagram de brech\u00f3
 - Fluxo: tira foto do manequim \u2192 IA gera modelo virtual \u2192 adiciona texto \u2192 IA gera legenda \u2192 baixa imagem pronta
 - **Persona:** tia 50-65 anos, usa Android Realme 360x800, Wi-Fi inst\u00e1vel, sem conhecimento t\u00e9cnico
 - **Budget MVP:** R$ 0/m\u00eas
-- **5 telas + integra\u00e7\u00e3o + deploy:** Upload \u2705 \u2192 Config \u2705 \u2192 Gera\u00e7\u00e3o \u2705 \u2192 Composi\u00e7\u00e3o \u2705 \u2192 Legenda \u2705 \u2192 E2E \u23f3 \u2192 Deploy \u23f3
+- **5 telas + integra\u00e7\u00e3o + deploy:** Upload \u2705 \u2192 Config \u2705 \u2192 Gera\u00e7\u00e3o \u2705 \u2192 Composi\u00e7\u00e3o \u2705 \u2192 Legenda \u2705 \u2192 E2E \ud83d\udea2 \u2192 Deploy \u23f3
 
-## Onde estamos (sess\u00e3o #3, 2026-06-28)
-- **\u00daltima se\u00e7\u00e3o completa:** Tela 5 (Legenda) \u2014 tag `v0.6-tela-5-legenda`
-- **Se\u00e7\u00e3o atual:** Integra\u00e7\u00e3o E2E (fluxo completo) \u2014 **pr\u00f3xima**
-- **Pr\u00f3xima se\u00e7\u00e3o:** Deploy Vercel + smoke test no mobile
-- Branch: `main` (limpo, 18 commits, 6 tags)
+## Onde estamos (sess\u00e3o #4, 2026-06-28)
+- **\u00daltima se\u00e7\u00e3o completa:** Integra\u00e7\u00e3o E2E (setup) \u2014 tag `v0.7-integracao-e2e`
+- **Se\u00e7\u00e3o atual:** Valida\u00e7\u00e3o manual no navegador + mobile (precisa do `.env.local` real do device de origem)
+- **Pr\u00f3xima se\u00e7\u00e3o:** Deploy Vercel (configurar env vars + push j\u00e1 feito + smoke test em produ\u00e7\u00e3o)
+- Branch: `main` (limpo, 19 commits, 7 tags)
 
 ## Stack travado (N\u00c3O mudar sem alinhamento)
 - **Framework:** Next.js 16.2.9 (App Router) + React 19 + TypeScript + Tailwind 4
-- **Hosting:** Vercel Hobby (plano B: Cloudflare \u2014 ver `../docs/PESQUISA-CLOUDFLARE-PLANO-B.md`)
-- **Banco:** Neon PostgreSQL (sa-east-1) + Prisma 7 (com `prisma.config.ts` separado)
+- **Hosting:** Vercel Hobby (plano B: Cloudflare)
+- **Banco:** Neon PostgreSQL (sa-east-1) + Prisma 7
 - **Imagens:** Cloudinary (`dmqqkv4ru`, 25 credits/m\u00eas)
-- **VTON:** HF Spaces (Kolors-VTON primary, OutfitAnyone + OOTDiffusion fallback) \u2014 **REAL**
-- **LLM (legendas):** Groq (Qwen3-32B, `gsk_...`) \u2014 Cerebras/OpenRouter pendente
+- **VTON:** HF Spaces (Kolors primary, OutfitAnyone + OOTDiffusion fallback)
+- **LLM (legendas):** Groq (Qwen3-32B) \u2014 Cerebras/OpenRouter pendente
 - **Valida\u00e7\u00e3o:** Zod + react-hook-form
-- **UI:** Componentes pr\u00f3prios (Button \u226548px, LgpdBanner, SizePills, ComposeForm, ComposedPreview, CaptionGenerator, CaptionEditor, CaptionActions, DownloadButton)
+- **Testes E2E:** Playwright (configurado, 19 testes em 2 projetos)
 
 ## Decis\u00f5es importantes
 - **Iago vai sozinho** (decis\u00e3o 22/06/2026)
-- **Vercel Hobby** (decis\u00e3o 22/06/2026): R$ 0/m\u00eas, risco TOS assumido
-- **Plano B Cloudflare** documentado caso Vercel reclame (~2 dias migra\u00e7\u00e3o)
-- **Tela 4 (Composi\u00e7\u00e3o) \u2014 Cloudinary server-side overlay** (decis\u00e3o 28/06)
-- **VTON real (HF Spaces) \u2014 Gradio HTTP API** (decis\u00e3o 28/06)
-- **Tela 5 (Legenda) \u2014 Op\u00e7\u00e3o C h\u00edbrida** (decis\u00e3o 28/06): gera 1 + bot\u00e3o "Gerar outra" + bot\u00e3o "Gerar 3 varia\u00e7\u00f5es"
-- **Job VTON:** fire-and-forget + polling 3s + timeout 90s
-- **Timeout do Vercel 2026:** 5 min, n\u00e3o 10s
-- **Limite de 3 regen** hardcoded na Tela 3 (`MAX_REGENS` no `app/generate/page.tsx`)
+- **Vercel Hobby** (R$ 0/m\u00eas, risco TOS assumido)
+- **Plano B Cloudflare** documentado
+- **Tela 4: Cloudinary server-side overlay** (3 layers verticais)
+- **VTON REAL** (Gradio HTTP API + fallback chain)
+- **Tela 5: Op\u00e7\u00e3o C h\u00edbrida** (1 + gerar outras)
+- **Playwright mobile-first** (viewport padr\u00e3o 360x800, Pixel 5 device)
 
 ## Arquivos cr\u00edticos j\u00e1 criados
-- `prisma/schema.prisma` (Settings, Post, Generation) + migra\u00e7\u00e3o aplicada
-- `prisma.config.ts` (Prisma 7+ com helper `env()`)
-- `src/lib/db/prisma.ts` (singleton PrismaPg)
-- `src/lib/cloudinary/client.ts` (uploadImage + buildComposedUrl + encodeCloudinaryText)
-- `src/lib/cloudinary/parsePublicId.ts` (extrai publicId+version de URL)
-- `src/lib/groq/client.ts` (generateCaption + **generateCaptions(count)** + extractHashtags)
-- `src/lib/huggingface/client.ts` (tryOn + **callHFSpace REAL** com Gradio HTTP API)
-- `src/lib/schemas/config.ts` (Zod: GARMENT_TYPES, SIZES, STYLES, parsePriceString)
-- `src/lib/schemas/compose.ts` (Zod: composeRequestSchema, composeFormSchema)
-- `src/lib/schemas/caption.ts` (Zod: **captionRequestSchema**, captionFormSchema, CAPTION_TONES)
-- `src/lib/hooks/use-tryon.ts` (POST + polling + timeout)
-- `src/lib/utils.ts` (cn, formatPrice, isValidUrl)
+- `prisma/schema.prisma` + migra\u00e7\u00e3o
+- `src/lib/db/prisma.ts`
+- `src/lib/cloudinary/{client.ts, parsePublicId.ts}`
+- `src/lib/groq/client.ts` (generateCaption + generateCaptions)
+- `src/lib/huggingface/client.ts` (callHFSpace REAL)
+- `src/lib/schemas/{config.ts, compose.ts, caption.ts}`
+- `src/lib/hooks/use-tryon.ts`
+- `src/lib/utils.ts`
 - `src/components/{ui,upload,config,generation,compose,caption}/*` (15+ componentes)
 - `src/app/{api,config,generate,compose,caption}/` (5 API routes + 5 p\u00e1ginas)
+- `src/app/{error.tsx, global-error.tsx, not-found.tsx}` (error boundaries + 404)
+- `playwright.config.ts` (mobile-first)
+- `tests/e2e/{navigation.spec.ts, api.spec.ts}` (19 testes)
+- `docs/E2E-CHECKLIST.md` (checklist detalhado pra Iago)
 
-## Vari\u00e1veis de ambiente (em `.env.local`, N\u00c3O vai pro git)
-- `DATABASE_URL` (Neon pooled)
+## Vari\u00e1veis de ambiente
+- `DATABASE_URL` (Neon)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 - `GROQ_API_KEY`, `GROQ_MODEL=qwen/qwen3-32b`
 - `HF_TOKEN` (opcional)
-- `VTON_PROVIDER=hf` (ou `fashn`)
+- `VTON_PROVIDER=hf`
 
 ## Pend\u00eancias conhecidas
-- **Cerebras/OpenRouter fallback** n\u00e3o implementado (placeholder no `lib/groq/client.ts`)
-- **FASHN provider** n\u00e3o implementado (Fase 2 \u2014 pago)
-- **LGPD banner** SSR flicker (mitiga\u00e7\u00e3o futura)
-- **Testes E2E** zero (Playwright/Vitest)
-- **Valida\u00e7\u00e3o runtime** das 5 telas com imagem real pendente (Iago precisa testar no navegador)
-- **`callHFSpace()`** implementado mas n\u00e3o testado com imagem real (cada Space tem nuances)
+- **Cerebras/OpenRouter fallback** (placeholder no `lib/groq/client.ts`)
+- **FASHN provider** n\u00e3o implementado
+- **LGPD banner SSR flicker** (mitiga\u00e7\u00e3o futura)
+- **Valida\u00e7\u00e3o runtime** das 5 telas com imagem real \u2014 PENDENTE (Iago precisa testar no device de origem com `.env.local`)
+- **`callHFSpace()`** implementado mas n\u00e3o testado com imagem real
 
-## Como retomar em outro device
+## Como retomar
 ```
-"Continuar Brech\u00f3 na M\u00e3o. Estado em STATE.md. Pr\u00f3xima se\u00e7\u00e3o: Integra\u00e7\u00e3o E2E."
+"Continuar Brech\u00f3 na M\u00e3o. Estado em STATE.md. Pr\u00f3xima se\u00e7\u00e3o: Deploy Vercel."
 ```
-
-> Detalhes: `STATE.md` | Status: `ROADMAP.md` | Spec: `../docs/SPEC-SDD.md` (n\u00e3o commitado, feito em outro device)
+Ou se for validar E2E no navegador:
+```
+"Continuar Brech\u00f3 na M\u00e3o. Estado em STATE.md. Pr\u00f3xima se\u00e7\u00e3o: validar E2E no navegador (veja docs/E2E-CHECKLIST.md)."
+```
