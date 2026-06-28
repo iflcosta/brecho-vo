@@ -3,9 +3,11 @@
  * @description Schema Zod + types compartilhados do formulário de configuração
  * @author Mavis
  *
- * Centraliza a validação pra que:
- * - O frontend use o mesmo tipo que o backend (single source of truth)
- * - A próxima seção (Tela 5 — Caption) possa reusar o tipo de roupa
+ * Mudança 28/06: `garmentType` (string único) → `garmentTypes` (array, min 1, max 5).
+ * Necessário pra suportar conjuntos (blusa + calça, vestido + cinto, etc).
+ *
+ * Mantém `garmentType` (string derivado) pra retrocompat com consumidores
+ * que ainda esperam 1 valor (ex: caption legada, debug).
  */
 import { z } from "zod";
 
@@ -13,7 +15,7 @@ import { z } from "zod";
 // Enums (listas fixas do SPEC — mantenha sincronizado com /api/caption)
 // ============================================================================
 
-/** Tipos de roupa que a tia pode anunciar */
+/** Tipos de roupa que a tia pode anunciar. Pode selecionar 1+ (conjunto). */
 export const GARMENT_TYPES = [
   "Camisa",
   "Camiseta",
@@ -45,18 +47,22 @@ export const STYLES = [
 ] as const;
 
 // ============================================================================
-// Schema Zod
+// Schema Zod (API + form)
 // ============================================================================
 
-/** Schema da config do produto. Coincide com o model Post do Prisma. */
+/**
+ * Schema da config completa do produto (usado pela API e pelo localStorage).
+ * `garmentTypes` é array — múltiplas peças (ex: conjunto).
+ */
 export const productConfigSchema = z.object({
-  garmentType: z.enum(GARMENT_TYPES, {
-    message: "Selecione o tipo da roupa",
-  }),
+  garmentTypes: z
+    .array(z.enum(GARMENT_TYPES))
+    .min(1, "Selecione pelo menos uma peça")
+    .max(5, "Máximo 5 peças por post"),
   size: z.enum(SIZES, {
     message: "Selecione o tamanho",
   }),
-  /** Preço em reais (sem prefixo R$). Ex: 45.00 = R$ 45,00 */
+  /** Preço em reais (número). Ex: 45.00 = R$ 45,00 */
   price: z
     .number({ message: "Informe o preço" })
     .positive("O preço deve ser maior que zero")
@@ -72,14 +78,17 @@ export const productConfigSchema = z.object({
     .or(z.literal("")),
 });
 
-/** Tipo inferido do schema (single source of truth pro form) */
+/** Tipo inferido do schema (single source of truth) */
 export type ProductConfig = z.infer<typeof productConfigSchema>;
 
-/** Versão do schema com price como string (pra usar com input type="text") */
+/**
+ * Versão do schema para o form (price como string, antes do parse).
+ */
 export const productConfigFormSchema = z.object({
-  garmentType: z.enum(GARMENT_TYPES, {
-    message: "Selecione o tipo da roupa",
-  }),
+  garmentTypes: z
+    .array(z.enum(GARMENT_TYPES))
+    .min(1, "Selecione pelo menos uma peça")
+    .max(5, "Máximo 5 peças por post"),
   size: z.enum(SIZES, {
     message: "Selecione o tamanho",
   }),
@@ -106,8 +115,30 @@ export const productConfigFormSchema = z.object({
 
 export type ProductConfigForm = z.infer<typeof productConfigFormSchema>;
 
+// ============================================================================
+// Helpers
+// ============================================================================
+
 /** Helper: converte string de preço (do form) em número (pra API) */
 export function parsePriceString(priceString: string): number {
   const clean = priceString.replace(/\D/g, "");
   return Number(clean) / 100;
+}
+
+/**
+ * Helper: junta array de peças numa string amigável.
+ * - 1 peça: "Blusa"
+ * - 2 peças: "Blusa + Calça"
+ * - 3+ peças: "Blusa + Calça + Tênis"
+ * - "Conjunto" sozinho vira "Conjunto" (sem alterar)
+ */
+export function joinGarmentTypes(types: readonly string[]): string {
+  if (types.length === 0) return "";
+  if (types.length === 1) return types[0];
+  // Se "Conjunto" tá presente sozinho, mantém. Se tiver outros, usa ele como prefixo.
+  if (types.includes("Conjunto") && types.length > 1) {
+    const others = types.filter((t) => t !== "Conjunto");
+    return `Conjunto (${others.join(" + ")})`;
+  }
+  return types.join(" + ");
 }

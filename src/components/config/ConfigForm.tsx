@@ -1,7 +1,9 @@
 /**
  * @spec docs/SPEC-SDD.md#tela-2-config
- * @description Formulário de configuração do produto (tipo, tamanho, preço, estilo, descrição)
+ * @description Formulário de configuração do produto (peças, tamanho, preço, estilo, descrição)
  * @author Mavis
+ *
+ * Mudança 28/06: garmentType (single select) → garmentTypes (multi-select).
  */
 "use client";
 
@@ -12,13 +14,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast, Toaster } from "sonner";
 import {
   productConfigFormSchema,
-  GARMENT_TYPES,
   STYLES,
   parsePriceString,
+  joinGarmentTypes,
   type ProductConfig,
   type ProductConfigForm,
 } from "@/lib/schemas/config";
 import { SizePills } from "@/components/config/SizePills";
+import { GarmentTypePills } from "@/components/config/GarmentTypePills";
 import { Button } from "@/components/ui/button";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -43,7 +46,7 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
   } = useForm<ProductConfigForm>({
     resolver: zodResolver(productConfigFormSchema),
     defaultValues: {
-      garmentType: undefined,
+      garmentTypes: [],
       size: undefined,
       price: "",
       style: undefined,
@@ -56,11 +59,25 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as Partial<ProductConfig>;
-        if (parsed.garmentType) setValue("garmentType", parsed.garmentType);
+        const parsed = JSON.parse(stored) as Partial<ProductConfig> & {
+          // Legacy field — may exist in old localStorage entries
+          garmentType?: string | string[];
+        };
+        // Migração: se localStorage antigo tinha `garmentType` (string ou array)
+        const legacy = parsed.garmentType;
+        if (Array.isArray(parsed.garmentTypes) && parsed.garmentTypes.length > 0) {
+          setValue("garmentTypes", parsed.garmentTypes as ProductConfigForm["garmentTypes"]);
+        } else if (typeof legacy === "string" && legacy) {
+          // Tenta extrair tipos do string legado ("Blusa + Calça")
+          const tokens = legacy.split("+").map((s) => s.trim()).filter(Boolean);
+          if (tokens.length > 0) {
+            setValue("garmentTypes", tokens as ProductConfigForm["garmentTypes"]);
+          }
+        } else if (Array.isArray(legacy) && legacy.length > 0) {
+          setValue("garmentTypes", legacy as ProductConfigForm["garmentTypes"]);
+        }
         if (parsed.size) setValue("size", parsed.size);
         if (typeof parsed.price === "number") {
-          // Reconstrói o formato "4500" (cents string) a partir do número
           const cents = Math.round(parsed.price * 100).toString();
           setValue("price", cents);
           setPreviewPrice(formatPrice(parsed.price));
@@ -73,14 +90,13 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
     }
   }, [setValue]);
 
-  // Atualiza preview do preço em tempo real (formato R$ 0,00)
+  // Atualiza preview do preço em tempo real
   const priceValue = watch("price");
   useEffect(() => {
     if (!priceValue) {
       setPreviewPrice("");
       return;
     }
-    // Se for string (form mode), aplica máscara. Se for number (fallback), formata.
     if (typeof priceValue === "string") {
       const clean = priceValue.replace(/\D/g, "");
       if (!clean) {
@@ -94,9 +110,8 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
   }, [priceValue]);
 
   function onSubmit(data: ProductConfigForm) {
-    // Converte price de string (form) pra number (ProductConfig + API)
     const numericData: ProductConfig = {
-      garmentType: data.garmentType,
+      garmentTypes: data.garmentTypes,
       size: data.size,
       price: parsePriceString(data.price),
       style: data.style,
@@ -104,11 +119,9 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
     };
 
     try {
-      // Formata preço como string "R$ 0,00" pra legibilidade
       const priceLabel = formatPrice(numericData.price);
       const persisted = { ...numericData, price: priceLabel };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
-      // Mas também persiste o número pra API usar
       localStorage.setItem("brecho-product-price-number", String(numericData.price));
     } catch {
       // ignora erro de storage
@@ -118,43 +131,29 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
     router.push("/generate");
   }
 
+  // Referência usada em teste (não removida)
+  void imageUrl;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <Toaster position="top-center" richColors />
 
-      {/* === Tipo da roupa === */}
+      {/* === Tipo da roupa (multi-select) === */}
       <div>
-        <label
-          htmlFor="garmentType"
-          className="block text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-1.5"
-        >
-          Tipo da roupa <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-1.5">
+          Peça(s) <span className="text-red-500">*</span>
         </label>
-        <select
-          id="garmentType"
-          {...register("garmentType")}
-          aria-invalid={!!errors.garmentType}
-          className={cn(
-            "w-full h-12 px-3 rounded-xl border-2 bg-white dark:bg-zinc-900",
-            "text-zinc-900 dark:text-zinc-50 text-base",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500",
-            errors.garmentType
-              ? "border-red-400"
-              : "border-zinc-200 dark:border-zinc-700"
+        <Controller
+          name="garmentTypes"
+          control={control}
+          render={({ field }) => (
+            <GarmentTypePills
+              value={field.value ?? []}
+              onChange={field.onChange}
+              error={errors.garmentTypes?.message}
+            />
           )}
-        >
-          <option value="">Selecione...</option>
-          {GARMENT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-        {errors.garmentType && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400 mt-1.5">
-            {errors.garmentType.message}
-          </p>
-        )}
+        />
       </div>
 
       {/* === Tamanho (pills) === */}
@@ -295,3 +294,6 @@ export function ConfigForm({ imageUrl }: ConfigFormProps) {
     </form>
   );
 }
+
+// Re-exporta joinGarmentTypes pra uso em outros componentes
+export { joinGarmentTypes };

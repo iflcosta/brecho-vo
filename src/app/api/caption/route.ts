@@ -3,20 +3,15 @@
  * @description Gera legenda automática via LLM (Groq Qwen3-32B primário).
  * @author Mavis
  *
- * POST body:
- *   - garmentType, size, price, style (obrigatórios)
- *   - description?, tone? (opcional)
- *   - defaultHashtags? (default "#brecho #modasusada #brechoonline")
- *   - variationCount? (1-5, default 1)
+ * POST body aceita garmentTypes (array) OU garmentType (string legado).
  *
  * Refs: docs/SPEC-SDD.md#tela-5-legenda
  */
 import { NextRequest, NextResponse } from "next/server";
 import { captionRequestSchema } from "@/lib/schemas/caption";
-import { generateCaptions, extractHashtags } from "@/lib/groq/client";
+import { generateCaptions, extractHashtags, type CaptionInput } from "@/lib/groq/client";
+import { joinGarmentTypes } from "@/lib/schemas/config";
 
-// Edge runtime seria ideal por latência, mas Groq SDK funciona em Node.
-// Mantemos Nodejs por consistência com as outras routes.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -39,6 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const {
+      garmentTypes,
       garmentType,
       size,
       price,
@@ -49,20 +45,18 @@ export async function POST(req: NextRequest) {
       variationCount,
     } = parsed.data;
 
-    const captions = await generateCaptions(
-      {
-        garmentType,
-        size,
-        price,
-        style,
-        description,
-        defaultHashtags,
-        tone,
-      },
-      variationCount
-    );
+    const input: CaptionInput = {
+      garmentTypes: garmentTypes ?? [],
+      garmentType: garmentType ?? joinGarmentTypes(garmentTypes ?? []),
+      size,
+      price,
+      style,
+      description,
+      defaultHashtags,
+      tone,
+    };
 
-    // Para a primeira variação, extrai hashtags pro frontend
+    const captions = await generateCaptions(input, variationCount);
     const hashtags = extractHashtags(captions[0] ?? "");
 
     return NextResponse.json({
@@ -85,13 +79,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * GET — healthcheck simples
- */
 export async function GET() {
   return NextResponse.json({
     success: true,
     message:
-      "POST com { garmentType, size, price, style, description?, tone?, defaultHashtags?, variationCount? }",
+      "POST com { garmentTypes? | garmentType?, size, price, style, description?, tone?, defaultHashtags?, variationCount? }",
   });
 }

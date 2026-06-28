@@ -12,7 +12,10 @@ import type { CaptionTone } from "@/lib/schemas/caption";
 
 type CaptionGeneratorProps = {
   payload: {
-    garmentType: string;
+    /** Array de tipos (preferido). Ex: ["Blusa", "Calça"] */
+    garmentTypes?: string[];
+    /** String legado concatenado. Ex: "Blusa + Calça" */
+    garmentType?: string;
     size: string;
     price: string;
     style: string;

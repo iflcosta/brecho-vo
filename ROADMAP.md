@@ -9,6 +9,7 @@
 | 4 | Tela 4: Composi\u00e7\u00e3o (texto sobreposto: TAM, pre\u00e7o, hashtags) | \u2705 DONE | 28/06 | 28/06 | `v0.5-tela-4-composicao` |
 | 5 | Tela 5: Legenda (gerar via Groq + edit + download) | \u2705 DONE | 28/06 | 28/06 | `v0.6-tela-5-legenda` |
 | 6 | Integra\u00e7\u00e3o E2E (setup: error boundaries + Playwright + checklist) | \ud83d\udea2 IN PROGRESS | 28/06 | - | `v0.7-integracao-e2e` |
+| 6.1 | **Bugfix:** multi-pe\u00e7a no form (conjunto blusa+cal\u00e7a) | \ud83d\udea2 IN PROGRESS | 28/06 | - | `v0.8-multi-pecas` |
 | 7 | Deploy Vercel + smoke test no mobile | \u23f3 PENDING | - | - | - |
 
 ## Progresso: **6/8 se\u00e7\u00f5es completas (75%)** (E2E em valida\u00e7\u00e3o manual)

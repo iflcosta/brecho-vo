@@ -67,7 +67,28 @@ Setup completo:
 
 ---
 
-## \ud83d\udc1b Bugs conhecidos
+## \ud83d\udc1b Bugs conhecidos (encontrados em teste E2E 28/06)
+
+- **[Tela 3] VTON falhando - todos os HF Spaces offline** (severidade: BLOCKER)
+  - Erro: "HTTP 503 ao submeter job em OOTDiffusion: Your space is in error"
+  - Kolors, OutfitAnyone, OOTDiffusion todos falhando (rate limit ou cold-start falhou)
+  - Causa prov\u00e1vel: Spaces p\u00fablicos do Hugging Face sobrecarregados em hor\u00e1rio de pico
+  - Workaround: usu\u00e1rio precisa fornecer `HF_TOKEN` (autentica\u00e7\u00e3o aumenta rate limit)
+  - Solu\u00e7\u00f5es pendentes: (a) pedir HF_TOKEN do Iago, (b) implementar retry com backoff 30-60s
+
+- **[Tela 2] Form s\u00f3 aceitava 1 pe\u00e7a (n\u00e3o conjunto)** (severidade: MAJOR) — RESOLVIDO v0.8
+  - Quando o manequim veste blusa + cal\u00e7a juntas, n\u00e3o dava pra anunciar como conjunto
+  - Solu\u00e7\u00e3o: `garmentType` (string enum) \u2192 `garmentTypes` (array, min 1, max 5)
+  - Pills multi-select com chips visuais + helper text "Conjunto? Selecione mais de uma pe\u00e7a"
+  - Migra\u00e7\u00e3o de schema antigo no localStorage mantida (parse de string "Blusa + Cal\u00e7a")
+
+- **Groq API key antiga expirada** (severidade: BLOCKER) — RESOLVIDO 28/06
+  - Causa: Iago regenerou a key em https://console.groq.com/keys
+  - Tamb\u00e9m havia bug de parsing (aspas externas no .env.local) que mascaravam o problema
+
+---
+
+## \ud83d\udc1b Bugs conhecidos (legacy)
 
 - **LGPD banner** renderiza ap\u00f3s hidrata\u00e7\u00e3o (flash inicial). Mitiga\u00e7\u00e3o: SSR com cookie de consent.
 - **`/api/tryon` GET** sem cache (Prisma direto). Em escala, valeria KV/Redis.

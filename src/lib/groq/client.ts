@@ -3,12 +3,12 @@
  * @description Cliente Groq (LLM primário) + fallback multi-provider (Cerebras, OpenRouter).
  * @author Mavis
  *
- * Funções:
- *  - generateCaption(): 1 legenda via Groq
- *  - generateCaptions(): N variações em paralelo
+ * Mudança 28/06: garmentType (string) → garmentTypes (array).
+ * Suporta conjuntos (blusa + calça, etc).
  */
 import Groq from "groq-sdk";
 import type { CaptionTone } from "@/lib/schemas/caption";
+import { joinGarmentTypes } from "@/lib/schemas/config";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY ?? "placeholder-not-configured",
@@ -17,7 +17,10 @@ const groq = new Groq({
 export const GROQ_DEFAULT_MODEL = process.env.GROQ_MODEL ?? "qwen/qwen3-32b";
 
 export type CaptionInput = {
-  garmentType: string;
+  /** Array de tipos de peça (ex: ["Blusa", "Calça"]). vira "Blusa + Calça" no prompt. */
+  garmentTypes: string[];
+  /** Mantém garmentType como string derivada pra retrocompat. Opcional. */
+  garmentType?: string;
   size: string;
   price: string;
   style: string;
@@ -28,7 +31,6 @@ export type CaptionInput = {
 
 /**
  * System prompt — copywriter de Instagram de brechó.
- * Define tom, formato, e regras de saída.
  */
 const SYSTEM_PROMPT = `Você é um copywriter especialista em Instagram para brechós brasileiros.
 Crie legendas curtas (máx 4 linhas / 600 caracteres), engajadoras, com 2-3 emojis no máximo.
@@ -37,19 +39,15 @@ Sempre inclua o preço destacado e hashtags relevantes ao final.
 Use linguagem natural, sem parecer robô. Nunca use aspas no início/fim.
 Termine sempre com 3-5 hashtags relevantes separadas por espaço.`;
 
-/**
- * Monta o user prompt a partir do input.
- * Inclui pequena variação de instrução pra cada chamada do loop
- * (ajuda o modelo a gerar opções diferentes em N chamadas).
- */
 function buildUserPrompt(input: CaptionInput, variationHint?: number): string {
+  const garment = input.garmentType ?? joinGarmentTypes(input.garmentTypes);
   const variationLine =
     variationHint !== undefined
       ? `\n\nEsta é a variação #${variationHint + 1} — crie uma versão com ângulo/ênfase diferente das anteriores.`
       : "";
 
   return `Crie uma legenda para:
-- Peça: ${input.garmentType}
+- Peça: ${garment}
 - Tamanho: ${input.size}
 - Preço: ${input.price}
 - Estilo: ${input.style}
@@ -59,14 +57,9 @@ Hashtags sugeridas (use como base, mas pode adaptar): ${input.defaultHashtags}
 Tom: ${input.tone ?? "casual"}${variationLine}`;
 }
 
-/**
- * Gera 1 legenda via Groq (primário).
- * Fallback para Cerebras e OpenRouter se Groq falhar (rate limit, 503, etc).
- */
 export async function generateCaption(input: CaptionInput): Promise<string> {
   const userPrompt = buildUserPrompt(input);
 
-  // Provider primário: Groq
   try {
     const completion = await groq.chat.completions.create({
       model: GROQ_DEFAULT_MODEL,
@@ -83,19 +76,9 @@ export async function generateCaption(input: CaptionInput): Promise<string> {
     console.warn("[groq] falhou:", err);
   }
 
-  // TODO (Fase 1.1): implementar fallback Cerebras e OpenRouter
-  // Por enquanto retorna mensagem amigável
   throw new Error("Todos os provedores de LLM falharam. Tente novamente em instantes.");
 }
 
-/**
- * Gera N variações de legenda em paralelo.
- * Cada chamada tem pequena variação de instrução pra diversificar.
- * Retorna array na mesma ordem do variationCount.
- *
- * Tolerante a falhas parciais: se 1 falhar, retorna as outras +
- * preenche buracos com mensagens amigáveis.
- */
 export async function generateCaptions(
   input: CaptionInput,
   count: number
@@ -109,21 +92,20 @@ export async function generateCaptions(
   const promises = Array.from({ length: limitedCount }, (_, i) =>
     generateCaption(input).catch((err) => {
       console.warn(`[groq] variação ${i + 1} falhou:`, err);
+      const garment = input.garmentType ?? joinGarmentTypes(input.garmentTypes);
       return null;
     })
   );
 
   const results = await Promise.all(promises);
 
-  // Preenche buracos com mensagens amigáveis
-  return results.map((text, i) =>
-    text ?? `✨ ${input.garmentType} ${input.size} por ${input.price}! Variação #${i + 1} — tente gerar outra.`
-  );
+  return results.map((text, i) => {
+    if (text) return text;
+    const garment = input.garmentType ?? joinGarmentTypes(input.garmentTypes);
+    return `✨ ${garment} ${input.size} por ${input.price}! Variação #${i + 1} — tente gerar outra.`;
+  });
 }
 
-/**
- * Extrai hashtags (#palavra) de uma legenda.
- */
 export function extractHashtags(caption: string): string[] {
   return caption.match(/#[a-zA-Z0-9_]+/g) ?? [];
 }

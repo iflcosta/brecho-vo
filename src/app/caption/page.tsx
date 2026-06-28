@@ -3,14 +3,7 @@
  * @description Tela 5 — Legenda. Última tela do fluxo.
  * @author Mavis
  *
- * Fluxo:
- *  1. Carrega `finalImageUrl` (Tela 4) do localStorage
- *  2. Carrega `productConfig` (Tela 2) do localStorage
- *  3. CaptionGenerator gera 1 ou mais variações via Groq
- *  4. CaptionEditor permite editar a legenda selecionada
- *  5. CaptionActions: Copiar legenda
- *  6. DownloadButton: baixa imagem composta (.jpg)
- *  7. Mensagem motivacional "Pronto pra postar! 🚀"
+ * Mudança 28/06: lê garmentTypes (array) OU garmentType (legado) do localStorage.
  */
 "use client";
 
@@ -22,11 +15,15 @@ import { CaptionGenerator } from "@/components/caption/CaptionGenerator";
 import { CaptionEditor } from "@/components/caption/CaptionEditor";
 import { CaptionActions } from "@/components/caption/CaptionActions";
 import { DownloadButton } from "@/components/caption/DownloadButton";
+import { joinGarmentTypes } from "@/lib/schemas/config";
 
 const FINAL_IMAGE_KEY = "brecho-final-image";
 const PRODUCT_CONFIG_KEY = "brecho-product-config-v1";
 
 type ProductConfig = {
+  /** Novo: array de peças */
+  garmentTypes?: string[];
+  /** Legado: string único (mantido pra retrocompat) */
   garmentType?: string;
   size?: string;
   price?: string;
@@ -39,6 +36,7 @@ export default function CaptionPage() {
   const router = useRouter();
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
   const [payload, setPayload] = useState<{
+    garmentTypes: string[];
     garmentType: string;
     size: string;
     price: string;
@@ -62,15 +60,31 @@ export default function CaptionPage() {
         return;
       }
 
+      // Resolve peças: array novo OU string legado OU "peça" placeholder
+      const garmentTypes = Array.isArray(config.garmentTypes) && config.garmentTypes.length > 0
+        ? config.garmentTypes
+        : config.garmentType
+        ? [config.garmentType]
+        : ["peça"];
+      const garmentType = joinGarmentTypes(garmentTypes);
+
+      // Hashtags default: inclui pelo menos 1 tipo como hashtag
+      const defaultHashtags = config.defaultHashtags ?? (
+        "#brecho " + garmentTypes
+          .filter((t) => t !== "Outro" && t !== "Acessório")
+          .map((t) => "#" + t.toLowerCase().replace(/[^a-z0-9]/g, ""))
+          .join(" ")
+      );
+
       setFinalImageUrl(imageUrl);
       setPayload({
-        garmentType: config.garmentType ?? "peça",
+        garmentTypes,
+        garmentType,
         size: config.size ?? "M",
         price: config.price ?? "R$ 0,00",
         style: config.style ?? "casual",
         description: config.description ?? "",
-        defaultHashtags:
-          config.defaultHashtags ?? "#brecho #modasusada #brechoonline",
+        defaultHashtags,
       });
     } catch (err) {
       console.error("[caption] erro ao carregar localStorage:", err);
@@ -94,7 +108,6 @@ export default function CaptionPage() {
     router.push("/");
   }, [router]);
 
-  // Estado vazio: imagem composta não foi encontrada
   if (missingImage) {
     return (
       <main className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
@@ -130,7 +143,6 @@ export default function CaptionPage() {
 
   return (
     <main className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
-      {/* Header */}
       <header className="sticky top-0 z-10 px-4 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <div className="max-w-md mx-auto flex items-center gap-2">
           <Link
@@ -148,7 +160,6 @@ export default function CaptionPage() {
       </header>
 
       <div className="flex-1 p-4 max-w-md mx-auto w-full space-y-6 pb-32">
-        {/* Preview da imagem final */}
         {finalImageUrl && (
           <section aria-label="Preview final">
             <div className="rounded-2xl overflow-hidden border-2 border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900">
@@ -163,7 +174,6 @@ export default function CaptionPage() {
           </section>
         )}
 
-        {/* Gerador */}
         {payload && (
           <section aria-label="Gerador de legenda" className="space-y-4">
             <CaptionGenerator
@@ -173,13 +183,11 @@ export default function CaptionPage() {
               onError={setError}
             />
 
-            {/* Editor (textarea) */}
             <CaptionEditor
               value={caption}
               onChange={setCaption}
             />
 
-            {/* Ações: copiar + download + finalizar */}
             <div className="space-y-2">
               <CaptionActions
                 caption={caption}
@@ -199,7 +207,6 @@ export default function CaptionPage() {
           </section>
         )}
 
-        {/* Mensagem motivacional (aparece após copiar ou baixar) */}
         {completed && (
           <section
             aria-live="polite"
