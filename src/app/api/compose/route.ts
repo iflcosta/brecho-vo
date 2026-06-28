@@ -1,64 +1,95 @@
 /**
  * @spec docs/SPEC-SDD.md#tela-4-composicao
- * @description Adiciona texto sobreposto na imagem (tamanho, preço, hashtags, @ da loja)
+ * @description Adiciona texto sobreposto na imagem (tamanho, preço, hashtags, @ da loja).
  * @author Mavis
  *
- * Status: ESQUELETO (Tela 4 — Composição)
+ * Server-side via Cloudinary text overlay (l_text). Não precisa re-upload.
  *
- * Esta rota delega para Cloudinary (text overlay) ou usa Canvas no client.
- * MVP: server-side via Cloudinary transformations (mais consistente).
- * Refs: docs/SPEC-SDD.md#5-composicao-de-texto-na-imagem
+ * Fluxo:
+ *  1. Recebe { imageUrl, size, price, hashtags, instagramHandle, position }
+ *  2. Extrai publicId + version da URL do Cloudinary
+ *  3. Monta URL com overlays (TAM + preço + rodapé)
+ *  4. Retorna composedUrl pro frontend
+ *
+ * Refs:
+ *  - https://cloudinary.com/documentation/image_transformations#adding_text_overlays
+ *  - docs/SPEC-SDD.md#5-composicao-de-texto-na-imagem
  */
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import { composeRequestSchema } from "@/lib/schemas/compose";
+import { parseCloudinaryUrl } from "@/lib/cloudinary/parsePublicId";
+import { buildComposedUrl } from "@/lib/cloudinary/client";
+
+// Força runtime Node — Cloudinary SDK é Node-only
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const {
-      imageUrl,
-      size,
-      price,
-      hashtags,
-      instagramHandle,
-      postId,
-    } = body as {
-      imageUrl?: string;
-      size?: string;
-      price?: string;
-      hashtags?: string;
-      instagramHandle?: string;
-      postId?: string;
-    };
+    const parsed = composeRequestSchema.safeParse(body);
 
-    if (!imageUrl) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "imageUrl é obrigatório" },
+        {
+          success: false,
+          error: "Dados inválidos",
+          details: parsed.error.issues.map((i) => ({
+            field: i.path.join("."),
+            message: i.message,
+          })),
+        },
         { status: 400 }
       );
     }
 
-    // TODO (Tela 4): implementar overlay de texto via Cloudinary ou Canvas
-    // Cloudinary: usar `l_text`, `co_white`, `b_rgb:00000080` para text overlay
-    // Exemplo URL Cloudinary:
-    //   https://res.cloudinary.com/<cloud>/image/upload/l_text:Inter_48_bold:TAM%20M,co_white,b_rgb:00000080/<image>
-    //
-    // Por enquanto: retorna a imagem sem modificações
-    const finalImageUrl = imageUrl;
+    const { imageUrl, size, price, hashtags, instagramHandle, position } = parsed.data;
 
-    if (postId) {
-      await prisma.post.update({
-        where: { id: postId },
-        data: { finalImage: finalImageUrl },
-      });
+    // Extrai publicId + version da URL do Cloudinary
+    const parsed_url = parseCloudinaryUrl(imageUrl);
+    if (!parsed_url) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "URL precisa ser do Cloudinary no formato /image/upload/v<version>/<public_id>.jpg",
+        },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true, finalImageUrl });
+    const composedUrl = buildComposedUrl(parsed_url.publicId, parsed_url.version, {
+      size,
+      price,
+      hashtags,
+      instagramHandle,
+      position,
+    });
+
+    return NextResponse.json({
+      success: true,
+      composedUrl,
+      publicId: parsed_url.publicId,
+      version: parsed_url.version,
+    });
   } catch (error) {
     console.error("[api/compose] erro:", error);
     return NextResponse.json(
-      { success: false, error: "Erro ao compor imagem" },
+      {
+        success: false,
+        error: "Erro ao compor imagem",
+        details: (error as Error).message,
+      },
       { status: 500 }
     );
   }
+}
+
+/**
+ * GET — healthcheck simples (útil pra smoke test)
+ */
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: "POST com { imageUrl, size, price, hashtags?, instagramHandle?, position? }",
+  });
 }

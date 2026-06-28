@@ -1,72 +1,74 @@
-# Contexto Rápido — Brechó na Mão
+# Contexto R\u00e1pido \u2014 Brech\u00f3 na M\u00e3o
 
-> **Lido PRIMEIRO por qualquer agente/IA em nova sessão.**
-> Seção atual: Tela 4 (Composição). Refs: `STATE.md` para detalhes, `ROADMAP.md` para status.
+> **Lido PRIMEIRO por qualquer agente/IA em nova sess\u00e3o.**
+> Se\u00e7\u00e3o atual: Tela 5 (Legenda). Refs: `STATE.md` para detalhes, `ROADMAP.md` para status.
 
 ## Projeto
-- Web app mobile-first para gerar posts de Instagram de brechó
-- Fluxo: tira foto do manequim → IA gera modelo virtual → adiciona texto → IA gera legenda → baixa imagem pronta
-- **Persona:** tia 50-65 anos, usa Android Realme 360x800, Wi-Fi instável, sem conhecimento técnico
-- **Budget MVP:** R$ 0/mês
-- **5 telas + integração + deploy:** Upload ✅ → Config ✅ → Geração ✅ → Composição ⏳ → Legenda ⏳ → E2E ⏳ → Deploy ⏳
+- Web app mobile-first para gerar posts de Instagram de brech\u00f3
+- Fluxo: tira foto do manequim \u2192 IA gera modelo virtual \u2192 adiciona texto \u2192 IA gera legenda \u2192 baixa imagem pronta
+- **Persona:** tia 50-65 anos, usa Android Realme 360x800, Wi-Fi inst\u00e1vel, sem conhecimento t\u00e9cnico
+- **Budget MVP:** R$ 0/m\u00eas
+- **5 telas + integra\u00e7\u00e3o + deploy:** Upload \u2705 \u2192 Config \u2705 \u2192 Gera\u00e7\u00e3o \u2705 \u2192 Composi\u00e7\u00e3o \u2705 \u2192 Legenda \u23f3 \u2192 E2E \u23f3 \u2192 Deploy \u23f3
 
-## Onde estamos (sessão #1, 2026-06-22)
-- **Última seção completa:** Tela 3 (Geração) — tag `v0.4-tela-3-geracao`
-- **Seção atual:** Tela 4 (Composição) — **próxima a implementar**
-- **Próxima seção:** Tela 5 (Legenda)
-- **Decisão técnica pendente:** Canvas (client) vs Cloudinary (server) pro texto sobreposto
-- Branch: `main` (limpo, 14 commits, 4 tags)
+## Onde estamos (sess\u00e3o #2, 2026-06-28)
+- **\u00daltima se\u00e7\u00e3o completa:** Tela 4 (Composi\u00e7\u00e3o) \u2014 tag `v0.5-tela-4-composicao`
+- **Se\u00e7\u00e3o atual:** Tela 5 (Legenda) \u2014 **pr\u00f3xima a implementar**
+- **Pr\u00f3xima se\u00e7\u00e3o:** Integra\u00e7\u00e3o E2E (fluxo completo)
+- Branch: `main` (limpo, 17 commits, 5 tags)
 
-## Stack travado (NÃO mudar sem alinhamento)
+## Stack travado (N\u00c3O mudar sem alinhamento)
 - **Framework:** Next.js 16.2.9 (App Router) + React 19 + TypeScript + Tailwind 4
-- **Hosting:** Vercel Hobby (plano B: Cloudflare — ver `../docs/PESQUISA-CLOUDFLARE-PLANO-B.md`)
+- **Hosting:** Vercel Hobby (plano B: Cloudflare \u2014 ver `../docs/PESQUISA-CLOUDFLARE-PLANO-B.md`)
 - **Banco:** Neon PostgreSQL (sa-east-1) + Prisma 7 (com `prisma.config.ts` separado)
-- **Imagens:** Cloudinary (`dmqqkv4ru`, 25 GB free)
-- **VTON:** HF Spaces (OutfitAnyone/Kolors) + FASHN API como upgrade pago
+- **Imagens:** Cloudinary (`dmqqkv4ru`, 25 credits/m\u00eas = ~25k transforma\u00e7\u00f5es)
+- **VTON:** HF Spaces (Kolors-VTON primary, OutfitAnyone + OOTDiffusion fallback) \u2014 **AGORA REAL**
 - **LLM (legendas):** Groq (Qwen3-32B, `gsk_...`) + Cerebras + OpenRouter fallback
-- **Validação:** Zod + react-hook-form
-- **UI:** Componentes próprios (Button ≥48px, LgpdBanner, SizePills)
+- **Valida\u00e7\u00e3o:** Zod + react-hook-form
+- **UI:** Componentes pr\u00f3prios (Button \u226548px, LgpdBanner, SizePills, ComposeForm, ComposedPreview)
 
-## Decisões importantes
-- **Iago vai sozinho** (decisão 22/06/2026)
-- **Vercel Hobby** (decisão 22/06/2026): R$ 0/mês, risco TOS assumido
-- **Plano B Cloudflare** documentado caso Vercel reclame (~2 dias migração)
-- **VTON real (HF Spaces) ainda é placeholder** — backend OK, falta implementar `callHFSpace()` em `lib/huggingface/client.ts`
+## Decis\u00f5es importantes
+- **Iago vai sozinho** (decis\u00e3o 22/06/2026)
+- **Vercel Hobby** (decis\u00e3o 22/06/2026): R$ 0/m\u00eas, risco TOS assumido
+- **Plano B Cloudflare** documentado caso Vercel reclame (~2 dias migra\u00e7\u00e3o)
+- **Tela 4 (Composi\u00e7\u00e3o) \u2014 Cloudinary server-side overlay** (decis\u00e3o 28/06): 3 layers verticais (TAM + pre\u00e7o + rodap\u00e9), sem re-upload, parser de URL Cloudinary pra extrair publicId+version
+- **VTON real (HF Spaces) AGORA FUNCIONA** \u2014 fetch HTTP direto pra API Gradio do Space, chain de fallback (Kolors \u2192 OutfitAnyone \u2192 OOTDiffusion), cold-start handling 30-60s, timeout 90s
 - **Job VTON:** fire-and-forget + polling 3s + timeout 90s (Vercel Hobby aguenta 5 min)
-- **Timeout do Vercel 2026:** 5 min, não 10s (corrigido)
+- **Timeout do Vercel 2026:** 5 min, n\u00e3o 10s (corrigido)
 - **Limite de 3 regen** hardcoded na Tela 3 (constante `MAX_REGENS` no `app/generate/page.tsx`)
 
-## Arquivos críticos já criados
-- `prisma/schema.prisma` (Settings, Post, Generation) + migração aplicada
+## Arquivos cr\u00edticos j\u00e1 criados
+- `prisma/schema.prisma` (Settings, Post, Generation) + migra\u00e7\u00e3o aplicada
 - `prisma.config.ts` (Prisma 7+ com helper `env()`)
 - `src/lib/db/prisma.ts` (singleton PrismaPg)
-- `src/lib/cloudinary/client.ts` (uploadImage)
+- `src/lib/cloudinary/client.ts` (uploadImage + **buildComposedUrl**)
+- `src/lib/cloudinary/parsePublicId.ts` (extrai publicId+version de URL)
 - `src/lib/groq/client.ts` (Qwen3-32B + fallback)
-- `src/lib/huggingface/client.ts` (VTON com feature flag, **`callHFSpace` é placeholder**)
+- `src/lib/huggingface/client.ts` (VTON + **callHFSpace REAL** com Gradio HTTP API)
 - `src/lib/schemas/config.ts` (Zod: GARMENT_TYPES, SIZES, STYLES, `parsePriceString`)
+- `src/lib/schemas/compose.ts` (Zod: composeRequestSchema, composeFormSchema)
 - `src/lib/hooks/use-tryon.ts` (POST + polling + timeout)
 - `src/lib/utils.ts` (cn, formatPrice, isValidUrl)
-- `src/components/{ui,upload,config,generation}/*` (5+ componentes)
-- `src/app/{api,config,generate,compose}/` (5 API routes + 4 páginas)
+- `src/components/{ui,upload,config,generation,compose}/*` (10+ componentes)
+- `src/app/{api,config,generate,compose}/` (5 API routes + 4 p\u00e1ginas)
 
-## Variáveis de ambiente (em `.env.local`, NÃO vai pro git)
+## Vari\u00e1veis de ambiente (em `.env.local`, N\u00c3O vai pro git)
 - `DATABASE_URL` (Neon pooled)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 - `GROQ_API_KEY`, `GROQ_MODEL=qwen/qwen3-32b`
 - `HF_TOKEN` (opcional)
 - `VTON_PROVIDER=hf` (ou `fashn`)
 
-## Pendências conhecidas
-- **`callHFSpace()` ainda é placeholder** — Tela 3 funciona, mas VTON real precisa implementação
-- **FASHN provider** não implementado (Fase 2 — pago)
-- **Cerebras/OpenRouter fallback** não implementado (Tela 5)
-- **Cloudinary text overlay** (Tela 4) não implementado — alternativa: client-side Canvas
-- **LGPD banner** SSR flicker (mitigação futura)
-- **Testes E2E** não escritos
+## Pend\u00eancias conhecidas
+- **callHFSpace() IMPLEMENTADO** \u2014 validar com imagem real quando for testar Tela 3
+- **Cloudinary text overlay IMPLEMENTADO** \u2014 validar visualmente com imagem real
+- **FASHN provider** n\u00e3o implementado (Fase 2 \u2014 pago)
+- **Cerebras/OpenRouter fallback** n\u00e3o implementado (Tela 5)
+- **LGPD banner** SSR flicker (mitiga\u00e7\u00e3o futura)
+- **Testes E2E** n\u00e3o escritos
 
 ## Como retomar em outro device
 ```
-"Continuar Brechó na Mão. Estado em STATE.md. Próxima seção: Tela 4 (Composição)."
+"Continuar Brech\u00f3 na M\u00e3o. Estado em STATE.md. Pr\u00f3xima se\u00e7\u00e3o: Tela 5 (Legenda)."
 ```
 
-> Detalhes: `STATE.md` | Status: `ROADMAP.md` | Spec: `../docs/SPEC-SDD.md` (v2.1)
+> Detalhes: `STATE.md` | Status: `ROADMAP.md` | Spec: `../docs/SPEC-SDD.md` (n\u00e3o commitado, feito em outro device)
